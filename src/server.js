@@ -43,7 +43,7 @@ console.log('USER ID =', u.id); token=jwt.sign({username:u.username,role:u.role,
  const tokenHash=crypto.createHash('sha256').update(token).digest('hex');await pool.query('INSERT INTO user_sessions(user_id,token_hash,expires_at) VALUES($1,$2,now()+interval \'8 hours\')',[u.id,tokenHash]);
  res.cookie('bperp_session',token,{...cookieOptions,maxAge:8*60*60*1000});res.json({user:{id:u.id,username:u.username,displayName:u.display_name,role:u.role,plant:u.plant,mustChangePassword:u.must_change_password}});
 }));
-console.log('TOKEN =', token);
+
 app.post('/api/auth/logout',auth,asyncRoute(async(req,res)=>{const token=req.cookies.bperp_session;const hash=crypto.createHash('sha256').update(token).digest('hex');await pool.query('UPDATE user_sessions SET revoked_at=now() WHERE token_hash=$1',[hash]);res.clearCookie('bperp_session',cookieOptions);res.status(204).end();}));
 app.get('/api/auth/me',auth,(req,res)=>res.json({user:req.user}));
 const orderSchema=z.object({orderNo:z.string().trim().min(2).max(48),plant:z.enum(['BOLE','SARIS','GERJI']),customerId:z.string().uuid(),productGrade:z.string().trim().min(1).max(50),quantityM3:z.number().positive().max(100000),unitPrice:z.number().nonnegative().max(100000000),requestedDeliveryAt:z.string().datetime().optional(),notes:z.string().max(2000).optional()});
