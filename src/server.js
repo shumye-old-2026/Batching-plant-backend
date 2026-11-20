@@ -37,7 +37,7 @@ app.post('/api/auth/login',rateLimit({windowMs:15*60*1000,limit:8,standardHeader
  const schema=z.object({username:z.string().min(1).max(120),password:z.string().min(1).max(300)});const parsed=schema.safeParse(req.body);if(!parsed.success)return res.status(400).json({error:'Invalid input'});
  const result=await pool.query('SELECT id,username,display_name,password_hash,role,plant,active,must_change_password FROM app_users WHERE username=$1',[parsed.data.username]);const u=result.rows[0];
  if(!u||!u.active||!(await argon2.verify(u.password_hash,parsed.data.password)))return res.status(401).json({error:'Incorrect credentials'});
- const
+ 
 console.log('JWT_SECRET =', process.env.JWT_SECRET);
 console.log('USER ID =', u.id); token=jwt.sign({username:u.username,role:u.role,plant:u.plant},process.env.JWT_SECRET,{subject:u.id,expiresIn:'8h',issuer:'bperp',audience:'bperp-web'});
  const tokenHash=crypto.createHash('sha256').update(token).digest('hex');await pool.query('INSERT INTO user_sessions(user_id,token_hash,expires_at) VALUES($1,$2,now()+interval \'8 hours\')',[u.id,tokenHash]);
